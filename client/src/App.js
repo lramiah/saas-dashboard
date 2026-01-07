@@ -9,8 +9,6 @@ function App() {
   const [insights, setInsights] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // CHANGE THIS URL AFTER DEPLOYING TO RENDER
-  // For now, it points to your own computer
   const API_URL = "https://saas-dashboard-wydh.onrender.com"; 
 
   const handleUpload = async () => {
@@ -28,7 +26,7 @@ function App() {
       setInsights(res.data.insights);
     } catch (error) {
       console.error(error);
-      alert("Error uploading. Is the server running on Port 5000?");
+      alert("Error uploading. The Backend might be asleep. Wait 1 minute and try again.");
     }
     setLoading(false);
   };
