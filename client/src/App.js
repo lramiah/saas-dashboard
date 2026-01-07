@@ -9,7 +9,7 @@ function App() {
   const [insights, setInsights] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API_URL = "https://saas-dashboard-wydh.onrender.com"; 
+  const API_URL = "https://saas-dashboard-wydh.onrender.com/api/upload"; 
 
   const handleUpload = async () => {
     if (!file) {
