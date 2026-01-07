@@ -1,71 +1,107 @@
-// client/src/App.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { 
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid 
+} from 'recharts';
+import './App.css';
+
+// Env variable for production vs local
+const API_ENDPOINT = "https://saas-dashboard-wydh.onrender.com/api/upload";
 
 function App() {
   const [file, setFile] = useState(null);
-  const [data, setData] = useState([]);
-  const [insights, setInsights] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const API_URL = "https://saas-dashboard-wydh.onrender.com/api/upload"; 
-
-  const handleUpload = async () => {
-    if (!file) {
-        alert("Please select a file first!");
-        return;
+  const [chartData, setChartData] = useState([]);
+  const [aiSummary, setAiSummary] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const onFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
     }
-    setLoading(true);
+  };
+
+  const onUpload = async () => {
+    if (!file) return alert("Please select a file first.");
+    
+    setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const res = await axios.post(API_URL, formData);
-      setData(res.data.data);
-      setInsights(res.data.insights);
-    } catch (error) {
-      console.error(error);
-      alert("Error uploading. The Backend might be asleep. Wait 1 minute and try again.");
+      const response = await axios.post(API_ENDPOINT, formData);
+      setChartData(response.data.data);
+      setAiSummary(response.data.insights);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Failed to process file. Check backend status.");
+    } finally {
+      setIsLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "800px", margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
-      <h1>📊 SaaS Analytics Dashboard</h1>
+    <div className="app-wrapper">
+      <header className="header">
+        <h1>SaaS Analytics Engine</h1>
+        <p>Enterprise-grade CSV analysis & visualization</p>
+      </header>
       
-      <div style={{ background: "#f4f4f4", padding: "20px", borderRadius: "8px", marginBottom: "20px" }}>
-        <h3>Step 1: Upload Data</h3>
-        <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
+      <div className="upload-zone">
+        <label htmlFor="csvInput" className="file-label">
+          {file ? `📄 ${file.name}` : "Select CSV Dataset"}
+        </label>
+        <input 
+          id="csvInput" 
+          type="file" 
+          accept=".csv" 
+          onChange={onFileChange} 
+        />
+        
         <button 
-          onClick={handleUpload} 
-          disabled={loading} 
-          style={{ padding: "10px 20px", marginLeft: "10px", cursor: "pointer", background: "black", color: "white", border: "none", borderRadius: "5px" }}
+          className="btn-primary" 
+          onClick={onUpload} 
+          disabled={isLoading || !file}
         >
-          {loading ? "Processing..." : "Generate Dashboard"}
+          {isLoading ? "Processing..." : "Generate Insights"}
         </button>
       </div>
 
-      {insights && (
-        <div style={{ background: "#e3f2fd", padding: "15px", borderRadius: "8px", marginBottom: "20px", borderLeft: "5px solid #2196f3" }}>
-          <strong>🤖 AI Executive Summary:</strong>
-          <p>{insights}</p>
+      {aiSummary && (
+        <div className="insights-panel">
+          <strong>Executive Summary:</strong>
+          <p style={{ marginTop: '0.5rem' }}>{aiSummary}</p>
         </div>
       )}
 
-      {data.length > 0 && (
-        <div style={{ height: 300, width: "100%", marginTop: "30px" }}>
-          <h3>Step 2: Visualization</h3>
-          <ResponsiveContainer>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="Month" /> 
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="Sales" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+      {chartData.length > 0 && (
+        <div className="chart-wrapper">
+          <h3 style={{ color: '#475569', marginBottom: '1rem' }}>Revenue Trajectory</h3>
+          <div style={{ height: 350, width: "100%" }}>
+            <ResponsiveContainer>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="Month" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="Sales" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#chartFill)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
     </div>
