@@ -17,6 +17,10 @@ const upload = multer({ dest: 'uploads/' });
 app.use(cors());
 app.use(express.json());
 
+// Health Check Endpoint
+app.get('/', (req, res) => {
+    res.send('Backend is running!');
+});
 
 app.post('/api/upload', upload.single('file'), (req, res) => {
     const results = [];
